@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Siri Credit Card Calculator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 450px;
+      margin: auto;
+      background: #fff;
+      padding: 25px 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin: 12px 0 5px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .receipt {
+      margin-top: 25px;
+      background: #fcfcfc;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .receipt-title {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 13px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Siri Credit Card Services</h2>
+
+    <label for="finalBank">Final Amount Sent to Bank (₹):</label>
+    <input type="number" id="finalBank" placeholder="Enter final amount sent to bank" />
+
+    <label for="platformCharge">Platform Charges (%)</label>
+    <input type="number" id="platformCharge" value="1.3" step="0.1" />
+
+    <label for="fixedFee">Fixed Server Fee (₹)</label>
+    <input type="number" id="fixedFee" value="15" />
+
+    <button onclick="generateReceipt()">Generate Receipt</button>
+
+    <div class="receipt" id="receipt" style="display:none;"></div>
+
+    <div class="footer">
+      Sagar | 📞 9959787923<br>
+      © Siri Credit Card Services
+    </div>
+  </div>
+
+  <script>
+    function generateReceipt() {
+      const finalBank = parseFloat(document.getElementById('finalBank').value);
+      const platformRate = parseFloat(document.getElementById('platformCharge').value) / 100;
+      const fixedFee = parseFloat(document.getElementById('fixedFee').value);
+
+      if (isNaN(finalBank) || finalBank <= 0) {
+        alert("Please enter a valid amount sent to bank.");
+        return;
+      }
+
+      const totalFee = (finalBank + fixedFee) / (1 - platformRate) - finalBank;
+      const amountAdded = finalBank + totalFee;
+
+      const platformCharges = amountAdded * platformRate;
+
+      const receipt = `
+        <div class="receipt-title">🧾 Receipt Summary</div>
+        <strong>Amount Sent to Bank:</strong> ₹${finalBank.toFixed(2)}<br>
+        <strong>Amount Added:</strong> ₹${amountAdded.toFixed(2)}<br>
+        <strong>Platform Charges (₹):</strong> ₹${platformCharges.toFixed(2)}<br>
+        <strong>Fixed Server Fee:</strong> ₹${fixedFee.toFixed(2)}<br>
+        <strong>Total Fee:</strong> ₹${totalFee.toFixed(2)}<br>
+      `;
+      document.getElementById('receipt').style.display = "block";
+      document.getElementById('receipt').innerHTML = receipt;
+    }
+  </script>
+</body>
+</html>
