@@ -1,1 +1,168 @@
-https://github.com/vemularaja228-dotcom/Siri-Credit-Card-Services
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Siri Credit Receipt</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+
+    .calculator {
+      max-width: 400px;
+      margin: 40px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .receipt {
+      background: #fff;
+      border: 1px dashed #aaa;
+      padding: 20px;
+      margin-top: 20px;
+      font-size: 16px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 5px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 15px;
+      padding: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .calc-btn { background: #333; color: white; }
+    .copy-btn { background: #555; color: white; }
+    .wa-btn { background: #25D366; color: white; }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 13px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="calculator">
+    <h2>🧾 Siri Credit Card Services</h2>
+
+    <label>Amount Added (₹)</label>
+    <input type="number" id="amountAdded" placeholder="e.g., 10000" />
+
+    <label>Final Bank Amount (₹)</label>
+    <input type="number" id="finalBank" placeholder="e.g., 9800" />
+
+    <label>Platform Charges (%)</label>
+    <input type="number" id="platform" value="2" />
+
+    <label>Fixed Server Fee (₹)</label>
+    <input type="number" id="fixedFee" value="15" />
+
+    <button class="calc-btn" onclick="calculate()">Generate Receipt</button>
+    <div class="receipt" id="receiptOutput"></div>
+
+    <button class="copy-btn" onclick="copyReceipt()">Copy Receipt</button>
+    <button class="wa-btn" onclick="shareWhatsApp()">Share on WhatsApp</button>
+  </div>
+
+  <div class="footer">Siri Credit Card Services | Sagar - 9959787923</div>
+
+  <script>
+    function calculate() {
+      const amountAdded = parseFloat(document.getElementById('amountAdded').value);
+      const finalBank = parseFloat(document.getElementById('finalBank').value);
+      const platformRate = parseFloat(document.getElementById('platform').value) || 0;
+      const fixedFee = parseFloat(document.getElementById('fixedFee').value) || 0;
+
+      let amount = 0, platformFee = 0, totalFee = 0, toBank = 0;
+
+      if (!isNaN(amountAdded)) {
+        amount = amountAdded;
+        platformFee = (amount * platformRate) / 100;
+        totalFee = platformFee + fixedFee;
+        toBank = amount - totalFee;
+      } else if (!isNaN(finalBank)) {
+        // Reverse calculate
+        const platformMultiplier = (100 - platformRate) / 100;
+        amount = (finalBank + fixedFee) / platformMultiplier;
+        platformFee = (amount * platformRate) / 100;
+        totalFee = platformFee + fixedFee;
+        toBank = finalBank;
+      } else {
+        alert("Please enter either Amount Added or Final Bank Amount.");
+        return;
+      }
+
+      const now = new Date().toLocaleString();
+
+      const receipt = 
+`-------------------------------
+    Siri Credit Card Services
+    Transaction Receipt
+-------------------------------
+Date       : ${now}
+Handled By : Sagar
+Contact    : 9959787923
+
+Amount     : ₹${amount.toFixed(2)}
+Platform % : ${platformRate.toFixed(2)}%
+Platform ₹ : ₹${platformFee.toFixed(2)}
+Add. Fee   : ₹${fixedFee.toFixed(2)}
+-------------------------------
+Total Fee  : ₹${totalFee.toFixed(2)}
+To Bank    : ₹${toBank.toFixed(2)}
+-------------------------------
+Thank you for choosing us!`;
+
+      document.getElementById('receiptOutput').innerText = receipt;
+    }
+
+    function copyReceipt() {
+      const text = document.getElementById('receiptOutput').innerText;
+      navigator.clipboard.writeText(text)
+        .then(() => alert("Receipt copied!"))
+        .catch(() => alert("Failed to copy."));
+    }
+
+    function shareWhatsApp() {
+      const text = document.getElementById('receiptOutput').innerText;
+      const encoded = encodeURIComponent(text);
+      const url = `https://wa.me/?text=${encoded}`;
+      window.open(url, '_blank');
+    }
+  </script>
+</body>
+</html>
