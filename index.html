@@ -7,32 +7,28 @@
 
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial, sans-serif;
       background-color: #f0f8ff;
       margin: 0;
       padding: 20px;
     }
-
     .container {
       max-width: 500px;
       margin: auto;
-      background: white;
+      background: #ffffff;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
-
     h2 {
       text-align: center;
       color: #007bff;
     }
-
     label {
       font-weight: bold;
       display: block;
       margin-top: 15px;
     }
-
     input {
       width: 100%;
       padding: 10px;
@@ -41,7 +37,10 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-
+    input:disabled {
+      background-color: #eee;
+      cursor: not-allowed;
+    }
     button {
       margin-top: 20px;
       width: 100%;
@@ -53,18 +52,14 @@
       border-radius: 6px;
       cursor: pointer;
     }
-
     .btns {
       display: flex;
       gap: 10px;
       margin-top: 15px;
-      flex-wrap: wrap;
     }
-
     .btns button {
       flex: 1;
     }
-
     .receipt {
       background: #fff;
       margin-top: 30px;
@@ -75,7 +70,6 @@
       white-space: pre-line;
       display: none;
     }
-
     .footer {
       text-align: center;
       margin-top: 25px;
@@ -87,101 +81,120 @@
 
 <body>
 
-  <div class="container">
-    <h2>Siri Credit Card Services</h2>
+<div class="container">
+  <h2>Siri Credit Card Services</h2>
 
-    <label>Amount Added (₹)</label>
-    <input type="number" id="amountAdded" placeholder="e.g. 100000">
+  <label>Amount Added (₹)</label>
+  <input type="number" id="amountAdded">
 
-    <label>OR Final Bank Amount (₹)</label>
-    <input type="number" id="bankAmount" placeholder="e.g. 97985">
+  <label>OR Final Bank Amount (₹)</label>
+  <input type="number" id="bankAmount">
 
-    <label>Platform Charges (%)</label>
-    <input type="number" id="platformRate" value="2">
+  <label>Platform Charges (%)</label>
+  <input type="number" id="platformRate" value="2">
 
-    <label>Fixed Server Fee (₹)</label>
-    <input type="number" id="fixedFee" value="15">
+  <label>Fixed Server Fee (₹)</label>
+  <input type="number" id="fixedFee" value="15">
 
-    <button onclick="calculate()">Generate Receipt</button>
+  <button onclick="calculate()">Generate Receipt</button>
 
-    <div class="btns">
-      <button onclick="shareWhatsApp()">Share via WhatsApp</button>
-    </div>
-
-    <div class="receipt" id="receiptOutput"></div>
-
-    <div class="footer">
-      Siri Credit Card Services | Sagar – 9959787923
-    </div>
+  <div class="btns">
+    <button onclick="shareWhatsApp()">Share via WhatsApp</button>
   </div>
 
-  <script>
-    function calculate() {
-      var amountAdded = document.getElementById("amountAdded").value;
-      var bankAmount  = document.getElementById("bankAmount").value;
-      var rate        = parseFloat(document.getElementById("platformRate").value) / 100;
-      var fixedFee    = parseFloat(document.getElementById("fixedFee").value);
-      var date        = new Date().toLocaleString();
+  <div class="receipt" id="receiptOutput"></div>
 
-      amountAdded = parseFloat(amountAdded);
-      bankAmount  = parseFloat(bankAmount);
+  <div class="footer">
+    Siri Credit Card Services | Sagar – 9959787923
+  </div>
+</div>
 
-      var amount, platformFee, totalFee, toBank;
+<script>
+function calculate() {
 
-      if (!isNaN(amountAdded) && isNaN(bankAmount)) {
-        // Amount Added → Bank
-        amount = amountAdded;
-        platformFee = amount * rate;
-        totalFee = platformFee + fixedFee;
-        toBank = amount - totalFee;
+  const amountAddedVal = document.getElementById("amountAdded").value.trim();
+  const bankAmountVal  = document.getElementById("bankAmount").value.trim();
 
-      } else if (isNaN(amountAdded) && !isNaN(bankAmount)) {
-        // Bank → Amount Added
-        toBank = bankAmount;
-        amount = (toBank + fixedFee) / (1 - rate);
-        platformFee = amount * rate;
-        totalFee = platformFee + fixedFee;
+  const rate  = parseFloat(document.getElementById("platformRate").value) / 100;
+  const fixed = parseFloat(document.getElementById("fixedFee").value);
 
-      } else {
-        alert("Enter only ONE value.");
-        return;
-      }
+  let amount, toBank, platformFee, totalFee;
 
-      var receipt =
-"-------------------------------\n" +
-"Siri Credit Card Services\n" +
-"Transaction Receipt\n" +
-"-------------------------------\n" +
-"Date       : " + date + "\n" +
-"Handled By : Sagar\n" +
-"Contact    : 9959787923\n\n" +
-"Amount     : ₹" + amount.toFixed(2) + "\n" +
-"Platform % : " + (rate * 100).toFixed(2) + "%\n" +
-"Platform ₹ : ₹" + platformFee.toFixed(2) + "\n" +
-"Add. Fee   : ₹" + fixedFee.toFixed(2) + "\n" +
-"-------------------------------\n" +
-"Total Fee  : ₹" + totalFee.toFixed(2) + "\n" +
-"To Bank    : ₹" + toBank.toFixed(2) + "\n" +
-"-------------------------------\n" +
-"Thank you for choosing us!";
+  if (amountAddedVal) {
+    amount = parseFloat(amountAddedVal);
+    platformFee = amount * rate;
+    totalFee = platformFee + fixed;
+    toBank = amount - totalFee;
 
-      var receiptDiv = document.getElementById("receiptOutput");
-      receiptDiv.style.display = "block";
-      receiptDiv.textContent = receipt;
-    }
+  } else if (bankAmountVal) {
+    toBank = parseFloat(bankAmountVal);
+    amount = (toBank + fixed) / (1 - rate);
+    platformFee = amount * rate;
+    totalFee = platformFee + fixed;
 
-    function shareWhatsApp() {
-      var receiptText = document.getElementById("receiptOutput").textContent.trim();
+  } else {
+    alert("Please enter an amount");
+    return;
+  }
 
-      if (!receiptText) {
-        alert("Please generate the receipt first.");
-        return;
-      }
+  const receipt =
+`-------------------------------
+Siri Credit Card Services
+Transaction Receipt
+-------------------------------
+Date       : ${new Date().toLocaleString()}
+Handled By : Sagar
+Contact    : 9959787923
 
-      var url = "https://wa.me/?text=" + encodeURIComponent(receiptText);
-      window.open(url, "_blank");
-    }
-  </script>
+Amount     : ₹${amount.toFixed(2)}
+Platform % : ${(rate * 100).toFixed(2)}%
+Platform ₹ : ₹${platformFee.toFixed(2)}
+Fixed Fee  : ₹${fixed.toFixed(2)}
+-------------------------------
+Total Fee  : ₹${totalFee.toFixed(2)}
+To Bank    : ₹${toBank.toFixed(2)}
+-------------------------------
+
+Thank you for choosing
+Siri Credit Card Services
+-------------------------------`;
+
+  const box = document.getElementById("receiptOutput");
+  box.style.display = "block";
+  box.textContent = receipt;
+}
+
+function shareWhatsApp() {
+  const text = document.getElementById("receiptOutput").textContent.trim();
+  if (!text) {
+    alert("Generate receipt first");
+    return;
+  }
+  window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
+}
+
+// ONE INPUT AT A TIME (UI ENFORCED)
+const amountAddedInput = document.getElementById("amountAdded");
+const bankAmountInput  = document.getElementById("bankAmount");
+
+amountAddedInput.addEventListener("input", function () {
+  if (this.value.trim() !== "") {
+    bankAmountInput.value = "";
+    bankAmountInput.disabled = true;
+  } else {
+    bankAmountInput.disabled = false;
+  }
+});
+
+bankAmountInput.addEventListener("input", function () {
+  if (this.value.trim() !== "") {
+    amountAddedInput.value = "";
+    amountAddedInput.disabled = true;
+  } else {
+    amountAddedInput.disabled = false;
+  }
+});
+</script>
 
 </body>
 </html>
