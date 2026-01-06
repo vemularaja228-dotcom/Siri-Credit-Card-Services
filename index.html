@@ -1,168 +1,173 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Siri Credit Receipt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Siri Credit Card Services – Calculator</title>
   <style>
     body {
-      font-family: 'Courier New', monospace;
-      background: #f7f7f7;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f8ff;
+      margin: 0;
       padding: 20px;
     }
-
-    .calculator {
-      max-width: 400px;
-      margin: 40px auto;
+    .container {
+      max-width: 500px;
+      margin: auto;
       background: white;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
-
-    .receipt {
-      background: #fff;
-      border: 1px dashed #aaa;
       padding: 20px;
-      margin-top: 20px;
-      font-size: 16px;
-      line-height: 1.6;
-      white-space: pre-wrap;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
-
     h2 {
       text-align: center;
-      margin-bottom: 20px;
-      font-weight: 700;
+      color: #007bff;
     }
-
     label {
-      display: block;
-      margin-top: 12px;
       font-weight: bold;
+      display: block;
+      margin-top: 15px;
     }
-
-    input[type="number"] {
+    input {
       width: 100%;
-      padding: 8px 10px;
+      padding: 10px;
       margin-top: 5px;
       font-size: 16px;
-      border: 1px solid #ccc;
       border-radius: 6px;
+      border: 1px solid #ccc;
     }
-
     button {
+      margin-top: 20px;
       width: 100%;
-      margin-top: 15px;
-      padding: 10px;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
       font-size: 16px;
-      font-weight: bold;
       border: none;
       border-radius: 6px;
       cursor: pointer;
     }
-
-    .calc-btn { background: #333; color: white; }
-    .copy-btn { background: #555; color: white; }
-    .wa-btn { background: #25D366; color: white; }
-
+    .receipt {
+      background: #fff;
+      margin-top: 30px;
+      padding: 20px;
+      border: 1px dashed #999;
+      border-radius: 10px;
+      font-family: monospace;
+      white-space: pre-line;
+    }
     .footer {
       text-align: center;
-      margin-top: 30px;
-      font-size: 13px;
-      color: #888;
+      margin-top: 25px;
+      font-size: 14px;
+      color: #777;
+    }
+    .btns {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btns button {
+      flex: 1;
     }
   </style>
 </head>
 <body>
 
-  <div class="calculator">
-    <h2>🧾 Siri Credit Card Services</h2>
+  <div class="container">
+    <h2>Siri Credit Card Services</h2>
 
-    <label>Amount Added (₹)</label>
-    <input type="number" id="amountAdded" placeholder="e.g., 10000" />
+    <label for="amountAdded">Amount Added (₹):</label>
+    <input type="number" id="amountAdded" placeholder="e.g., 200000" />
 
-    <label>Final Bank Amount (₹)</label>
-    <input type="number" id="finalBank" placeholder="e.g., 9800" />
+    <label for="bankAmount">OR Final Bank Amount (₹):</label>
+    <input type="number" id="bankAmount" placeholder="e.g., 195000" />
 
-    <label>Platform Charges (%)</label>
-    <input type="number" id="platform" value="2" />
+    <label for="platformRate">Platform Charges (%)</label>
+    <input type="number" id="platformRate" value="2" />
 
-    <label>Fixed Server Fee (₹)</label>
+    <label for="fixedFee">Fixed Server Fee (₹)</label>
     <input type="number" id="fixedFee" value="15" />
 
-    <button class="calc-btn" onclick="calculate()">Generate Receipt</button>
-    <div class="receipt" id="receiptOutput"></div>
+    <button onclick="calculate()">Generate Receipt</button>
 
-    <button class="copy-btn" onclick="copyReceipt()">Copy Receipt</button>
-    <button class="wa-btn" onclick="shareWhatsApp()">Share on WhatsApp</button>
+    <div class="btns" style="margin-top: 15px;">
+      <button onclick="downloadReceipt()">Download Receipt</button>
+      <button onclick="shareWhatsApp()">Share via WhatsApp</button>
+    </div>
+
+    <div class="receipt" id="receiptOutput" style="display:none;"></div>
+
+    <div class="footer">Siri Credit Card Services | Sagar – 9959787923</div>
   </div>
 
-  <div class="footer">Siri Credit Card Services | Sagar - 9959787923</div>
-
+  <!-- html2canvas for download -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     function calculate() {
       const amountAdded = parseFloat(document.getElementById('amountAdded').value);
-      const finalBank = parseFloat(document.getElementById('finalBank').value);
-      const platformRate = parseFloat(document.getElementById('platform').value) || 0;
-      const fixedFee = parseFloat(document.getElementById('fixedFee').value) || 0;
+      const bankAmount = parseFloat(document.getElementById('bankAmount').value);
+      const platformRate = parseFloat(document.getElementById('platformRate').value) / 100;
+      const fixedFee = parseFloat(document.getElementById('fixedFee').value);
+      const date = new Date().toLocaleString();
 
-      let amount = 0, platformFee = 0, totalFee = 0, toBank = 0;
+      let amount = 0, platformFee = 0, totalFee = 0, bankSent = 0;
 
-      if (!isNaN(amountAdded)) {
+      if (!isNaN(amountAdded) && isNaN(bankAmount)) {
+        platformFee = amountAdded * platformRate;
+        totalFee = platformFee + fixedFee;
+        bankSent = amountAdded - totalFee;
         amount = amountAdded;
-        platformFee = (amount * platformRate) / 100;
-        totalFee = platformFee + fixedFee;
-        toBank = amount - totalFee;
-      } else if (!isNaN(finalBank)) {
-        // Reverse calculate
-        const platformMultiplier = (100 - platformRate) / 100;
-        amount = (finalBank + fixedFee) / platformMultiplier;
-        platformFee = (amount * platformRate) / 100;
-        totalFee = platformFee + fixedFee;
-        toBank = finalBank;
+      } else if (isNaN(amountAdded) && !isNaN(bankAmount)) {
+        totalFee = bankAmount * platformRate + fixedFee;
+        amount = bankAmount + totalFee;
+        platformFee = amount * platformRate;
+        bankSent = bankAmount;
       } else {
-        alert("Please enter either Amount Added or Final Bank Amount.");
+        alert("Enter only one: Amount Added OR Final Bank Amount.");
         return;
       }
 
-      const now = new Date().toLocaleString();
-
-      const receipt = 
+      const receiptText = 
 `-------------------------------
     Siri Credit Card Services
     Transaction Receipt
 -------------------------------
-Date       : ${now}
+Date       : ${date}
 Handled By : Sagar
 Contact    : 9959787923
 
 Amount     : ₹${amount.toFixed(2)}
-Platform % : ${platformRate.toFixed(2)}%
+Platform % : ${(platformRate*100).toFixed(2)}%
 Platform ₹ : ₹${platformFee.toFixed(2)}
 Add. Fee   : ₹${fixedFee.toFixed(2)}
 -------------------------------
 Total Fee  : ₹${totalFee.toFixed(2)}
-To Bank    : ₹${toBank.toFixed(2)}
+To Bank    : ₹${bankSent.toFixed(2)}
 -------------------------------
 Thank you for choosing us!`;
 
-      document.getElementById('receiptOutput').innerText = receipt;
+      document.getElementById('receiptOutput').style.display = 'block';
+      document.getElementById('receiptOutput').innerText = receiptText;
     }
 
-    function copyReceipt() {
-      const text = document.getElementById('receiptOutput').innerText;
-      navigator.clipboard.writeText(text)
-        .then(() => alert("Receipt copied!"))
-        .catch(() => alert("Failed to copy."));
+    function downloadReceipt() {
+      const receipt = document.getElementById('receiptOutput');
+      html2canvas(receipt).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'Siri_Transaction_Receipt.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      });
     }
 
     function shareWhatsApp() {
-      const text = document.getElementById('receiptOutput').innerText;
-      const encoded = encodeURIComponent(text);
-      const url = `https://wa.me/?text=${encoded}`;
+      const receipt = document.getElementById('receiptOutput').innerText;
+      const url = `https://wa.me/?text=${encodeURIComponent(receipt)}`;
       window.open(url, '_blank');
     }
   </script>
+
 </body>
 </html>
