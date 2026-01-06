@@ -1,85 +1,125 @@
-<script>
-  // Get elements safely (NO implicit globals)
-  const amountAddedEl = document.getElementById('amountAdded');
-  const bankAmountEl  = document.getElementById('bankAmount');
-  const platformEl    = document.getElementById('platform');
-  const additionalEl  = document.getElementById('additional');
-  const receiptEl     = document.getElementById('receiptOutput');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Siri Credit Card Services</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  // Auto-clear logic
-  amountAddedEl.addEventListener('input', () => {
-    bankAmountEl.value = '';
-  });
-
-  bankAmountEl.addEventListener('input', () => {
-    amountAddedEl.value = '';
-  });
-
-  function calculate() {
-    const added = parseFloat(amountAddedEl.value);
-    const bank  = parseFloat(bankAmountEl.value);
-    const rate  = parseFloat(platformEl.value) / 100;
-    const fixed = parseFloat(additionalEl.value);
-    const date  = new Date().toLocaleString();
-
-    let amount, platformFee, totalFee, toBank;
-
-    if (!isNaN(added)) {
-      // Case 1: Amount Added
-      amount = added;
-      platformFee = amount * rate;
-      totalFee = platformFee + fixed;
-      toBank = amount - totalFee;
-
-    } else if (!isNaN(bank)) {
-      // Case 2: Final Bank Amount
-      toBank = bank;
-      amount = (toBank + fixed) / (1 - rate);
-      platformFee = amount * rate;
-      totalFee = platformFee + fixed;
-
-    } else {
-      alert("Enter Amount Added OR Final Bank Amount");
-      return;
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
     }
 
-    receiptEl.innerText =
-`-------------------------------
-Siri Credit Card Services
-Transaction Receipt
--------------------------------
-Date       : ${date}
-Handled By : Sagar
-Contact    : 9959787923
-
-Amount     : ₹${amount.toFixed(2)}
-Platform % : ${(rate * 100).toFixed(2)}%
-Platform ₹ : ₹${platformFee.toFixed(2)}
-Add. Fee   : ₹${fixed.toFixed(2)}
--------------------------------
-Total Fee  : ₹${totalFee.toFixed(2)}
-To Bank    : ₹${toBank.toFixed(2)}
--------------------------------
-Thank you for choosing us!`;
-  }
-
-  function copyReceipt() {
-    if (!receiptEl.innerText.trim()) {
-      alert("Generate receipt first");
-      return;
+    .box {
+      max-width: 360px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
     }
-    navigator.clipboard.writeText(receiptEl.innerText);
-    alert("Receipt copied!");
-  }
 
-  function shareWhatsApp() {
-    if (!receiptEl.innerText.trim()) {
-      alert("Generate receipt first");
-      return;
+    h2 {
+      text-align: center;
     }
-    window.open(
-      "https://wa.me/?text=" + encodeURIComponent(receiptEl.innerText),
-      "_blank"
-    );
-  }
-</script>
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 15px;
+      font-size: 16px;
+    }
+
+    pre {
+      background: #fafafa;
+      border: 1px dashed #999;
+      padding: 10px;
+      margin-top: 15px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Siri Credit Card Services</h2>
+
+    <label>Amount Added (₹)</label>
+    <input type="number" id="amountAdded">
+
+    <label>OR Final Bank Amount (₹)</label>
+    <input type="number" id="bankAmount">
+
+    <label>Platform Charges (%)</label>
+    <input type="number" id="platform" value="1.3">
+
+    <label>Additional Charges (₹)</label>
+    <input type="number" id="additional" value="15">
+
+    <button onclick="generate()">Generate Receipt</button>
+
+    <pre id="output"></pre>
+  </div>
+
+  <script>
+    function generate() {
+      var amountAdded = document.getElementById("amountAdded").value;
+      var bankAmount  = document.getElementById("bankAmount").value;
+      var platform    = document.getElementById("platform").value;
+      var additional  = document.getElementById("additional").value;
+
+      amountAdded = parseFloat(amountAdded);
+      bankAmount  = parseFloat(bankAmount);
+      platform    = parseFloat(platform) / 100;
+      additional  = parseFloat(additional);
+
+      var amount, platformFee, totalFee, toBank;
+
+      if (!isNaN(amountAdded)) {
+        amount = amountAdded;
+        platformFee = amount * platform;
+        totalFee = platformFee + additional;
+        toBank = amount - totalFee;
+
+      } else if (!isNaN(bankAmount)) {
+        toBank = bankAmount;
+        amount = (toBank + additional) / (1 - platform);
+        platformFee = amount * platform;
+        totalFee = platformFee + additional;
+
+      } else {
+        alert("Enter amount");
+        return;
+      }
+
+      var text =
+"Siri Credit Card Services\n" +
+"-------------------------\n" +
+"Amount     : ₹" + amount.toFixed(2) + "\n" +
+"Platform % : " + (platform*100).toFixed(2) + "%\n" +
+"Platform ₹ : ₹" + platformFee.toFixed(2) + "\n" +
+"Add. Fee   : ₹" + additional.toFixed(2) + "\n" +
+"-------------------------\n" +
+"Total Fee  : ₹" + totalFee.toFixed(2) + "\n" +
+"To Bank    : ₹" + toBank.toFixed(2);
+
+      document.getElementById("output").textContent = text;
+    }
+  </script>
+
+</body>
+</html>
