@@ -1,123 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Siri Credit Card Services</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Siri Credit Card Services – Calculator</title>
 
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f8ff;
+      margin: 0;
       padding: 20px;
     }
 
-    .box {
-      max-width: 360px;
+    .container {
+      max-width: 500px;
       margin: auto;
       background: white;
       padding: 20px;
-      border-radius: 8px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
 
     h2 {
       text-align: center;
+      color: #007bff;
     }
 
     label {
-      display: block;
-      margin-top: 12px;
       font-weight: bold;
+      display: block;
+      margin-top: 15px;
     }
 
     input {
       width: 100%;
-      padding: 8px;
+      padding: 10px;
       margin-top: 5px;
       font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
 
     button {
+      margin-top: 20px;
       width: 100%;
-      padding: 10px;
-      margin-top: 15px;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
       font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
-    pre {
-      background: #fafafa;
-      border: 1px dashed #999;
-      padding: 10px;
+    .btns {
+      display: flex;
+      gap: 10px;
       margin-top: 15px;
-      white-space: pre-wrap;
+      flex-wrap: wrap;
+    }
+
+    .btns button {
+      flex: 1;
+    }
+
+    .receipt {
+      background: #fff;
+      margin-top: 30px;
+      padding: 20px;
+      border: 1px dashed #999;
+      border-radius: 10px;
+      font-family: monospace;
+      white-space: pre-line;
+      display: none;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 14px;
+      color: #777;
     }
   </style>
 </head>
+
 <body>
 
-  <div class="box">
+  <div class="container">
     <h2>Siri Credit Card Services</h2>
 
     <label>Amount Added (₹)</label>
-    <input type="number" id="amountAdded">
+    <input type="number" id="amountAdded" placeholder="e.g. 100000">
 
     <label>OR Final Bank Amount (₹)</label>
-    <input type="number" id="bankAmount">
+    <input type="number" id="bankAmount" placeholder="e.g. 97985">
 
     <label>Platform Charges (%)</label>
-    <input type="number" id="platform" value="1.3">
+    <input type="number" id="platformRate" value="2">
 
-    <label>Additional Charges (₹)</label>
-    <input type="number" id="additional" value="15">
+    <label>Fixed Server Fee (₹)</label>
+    <input type="number" id="fixedFee" value="15">
 
-    <button onclick="generate()">Generate Receipt</button>
+    <button onclick="calculate()">Generate Receipt</button>
 
-    <pre id="output"></pre>
+    <div class="btns">
+      <button onclick="shareWhatsApp()">Share via WhatsApp</button>
+    </div>
+
+    <div class="receipt" id="receiptOutput"></div>
+
+    <div class="footer">
+      Siri Credit Card Services | Sagar – 9959787923
+    </div>
   </div>
 
   <script>
-    function generate() {
+    function calculate() {
       var amountAdded = document.getElementById("amountAdded").value;
       var bankAmount  = document.getElementById("bankAmount").value;
-      var platform    = document.getElementById("platform").value;
-      var additional  = document.getElementById("additional").value;
+      var rate        = parseFloat(document.getElementById("platformRate").value) / 100;
+      var fixedFee    = parseFloat(document.getElementById("fixedFee").value);
+      var date        = new Date().toLocaleString();
 
       amountAdded = parseFloat(amountAdded);
       bankAmount  = parseFloat(bankAmount);
-      platform    = parseFloat(platform) / 100;
-      additional  = parseFloat(additional);
 
       var amount, platformFee, totalFee, toBank;
 
-      if (!isNaN(amountAdded)) {
+      if (!isNaN(amountAdded) && isNaN(bankAmount)) {
+        // Amount Added → Bank
         amount = amountAdded;
-        platformFee = amount * platform;
-        totalFee = platformFee + additional;
+        platformFee = amount * rate;
+        totalFee = platformFee + fixedFee;
         toBank = amount - totalFee;
 
-      } else if (!isNaN(bankAmount)) {
+      } else if (isNaN(amountAdded) && !isNaN(bankAmount)) {
+        // Bank → Amount Added
         toBank = bankAmount;
-        amount = (toBank + additional) / (1 - platform);
-        platformFee = amount * platform;
-        totalFee = platformFee + additional;
+        amount = (toBank + fixedFee) / (1 - rate);
+        platformFee = amount * rate;
+        totalFee = platformFee + fixedFee;
 
       } else {
-        alert("Enter amount");
+        alert("Enter only ONE value.");
         return;
       }
 
-      var text =
+      var receipt =
+"-------------------------------\n" +
 "Siri Credit Card Services\n" +
-"-------------------------\n" +
+"Transaction Receipt\n" +
+"-------------------------------\n" +
+"Date       : " + date + "\n" +
+"Handled By : Sagar\n" +
+"Contact    : 9959787923\n\n" +
 "Amount     : ₹" + amount.toFixed(2) + "\n" +
-"Platform % : " + (platform*100).toFixed(2) + "%\n" +
+"Platform % : " + (rate * 100).toFixed(2) + "%\n" +
 "Platform ₹ : ₹" + platformFee.toFixed(2) + "\n" +
-"Add. Fee   : ₹" + additional.toFixed(2) + "\n" +
-"-------------------------\n" +
+"Add. Fee   : ₹" + fixedFee.toFixed(2) + "\n" +
+"-------------------------------\n" +
 "Total Fee  : ₹" + totalFee.toFixed(2) + "\n" +
-"To Bank    : ₹" + toBank.toFixed(2);
+"To Bank    : ₹" + toBank.toFixed(2) + "\n" +
+"-------------------------------\n" +
+"Thank you for choosing us!";
 
-      document.getElementById("output").textContent = text;
+      var receiptDiv = document.getElementById("receiptOutput");
+      receiptDiv.style.display = "block";
+      receiptDiv.textContent = receipt;
+    }
+
+    function shareWhatsApp() {
+      var receiptText = document.getElementById("receiptOutput").textContent.trim();
+
+      if (!receiptText) {
+        alert("Please generate the receipt first.");
+        return;
+      }
+
+      var url = "https://wa.me/?text=" + encodeURIComponent(receiptText);
+      window.open(url, "_blank");
     }
   </script>
 
