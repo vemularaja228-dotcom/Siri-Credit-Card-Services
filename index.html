@@ -1,5 +1,7 @@
 <script>
-  // Get elements safely (NO implicit globals)
+document.addEventListener("DOMContentLoaded", function () {
+
+  // Safe element references
   const amountAddedEl = document.getElementById('amountAdded');
   const bankAmountEl  = document.getElementById('bankAmount');
   const platformEl    = document.getElementById('platform');
@@ -15,7 +17,8 @@
     amountAddedEl.value = '';
   });
 
-  function calculate() {
+  // Expose functions globally (for button onclick)
+  window.calculate = function () {
     const added = parseFloat(amountAddedEl.value);
     const bank  = parseFloat(bankAmountEl.value);
     const rate  = parseFloat(platformEl.value) / 100;
@@ -25,14 +28,12 @@
     let amount, platformFee, totalFee, toBank;
 
     if (!isNaN(added)) {
-      // Case 1: Amount Added
       amount = added;
       platformFee = amount * rate;
       totalFee = platformFee + fixed;
       toBank = amount - totalFee;
 
     } else if (!isNaN(bank)) {
-      // Case 2: Final Bank Amount
       toBank = bank;
       amount = (toBank + fixed) / (1 - rate);
       platformFee = amount * rate;
@@ -61,18 +62,18 @@ Total Fee  : ₹${totalFee.toFixed(2)}
 To Bank    : ₹${toBank.toFixed(2)}
 -------------------------------
 Thank you for choosing us!`;
-  }
+  };
 
-  function copyReceipt() {
+  window.copyReceipt = function () {
     if (!receiptEl.innerText.trim()) {
       alert("Generate receipt first");
       return;
     }
     navigator.clipboard.writeText(receiptEl.innerText);
     alert("Receipt copied!");
-  }
+  };
 
-  function shareWhatsApp() {
+  window.shareWhatsApp = function () {
     if (!receiptEl.innerText.trim()) {
       alert("Generate receipt first");
       return;
@@ -81,5 +82,7 @@ Thank you for choosing us!`;
       "https://wa.me/?text=" + encodeURIComponent(receiptEl.innerText),
       "_blank"
     );
-  }
+  };
+
+});
 </script>
