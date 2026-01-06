@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Siri Credit Receipt</title>
+
   <style>
     body {
       font-family: 'Courier New', monospace;
@@ -33,7 +34,6 @@
     h2 {
       text-align: center;
       margin-bottom: 20px;
-      font-weight: 700;
     }
 
     label {
@@ -42,7 +42,7 @@
       font-weight: bold;
     }
 
-    input[type="number"] {
+    input {
       width: 100%;
       padding: 8px 10px;
       margin-top: 5px;
@@ -79,16 +79,20 @@
   <div class="calculator">
     <h2>🧾 Siri Credit Card Services</h2>
 
-    <label>Amount (₹)</label>
-    <input type="number" id="amount" placeholder="e.g., 10000" />
+    <label>Amount Added (₹)</label>
+    <input type="number" id="amountAdded" placeholder="e.g. 100000">
+
+    <label>OR Final Bank Amount (₹)</label>
+    <input type="number" id="bankAmount" placeholder="e.g. 97985">
 
     <label>Platform Charges (%)</label>
-    <input type="number" id="platform" value="1.3" />
+    <input type="number" id="platform" value="1.3">
 
     <label>Additional Charges (₹)</label>
-    <input type="number" id="additional" value="15" />
+    <input type="number" id="additional" value="15">
 
     <button class="calc-btn" onclick="calculate()">Generate Receipt</button>
+
     <div class="receipt" id="receiptOutput"></div>
 
     <button class="copy-btn" onclick="copyReceipt()">Copy Receipt</button>
@@ -98,52 +102,66 @@
   <div class="footer">Siri Credit Card Services | Sagar - 9959787923</div>
 
   <script>
+    // Auto-clear logic
+    amountAdded.oninput = () => bankAmount.value = '';
+    bankAmount.oninput = () => amountAdded.value = '';
+
     function calculate() {
-      const amount = parseFloat(document.getElementById('amount').value) || 0;
-      const platformRate = parseFloat(document.getElementById('platform').value) || 0;
-      const additional = parseFloat(document.getElementById('additional').value) || 0;
+      const added = parseFloat(amountAdded.value);
+      const bank = parseFloat(bankAmount.value);
+      const rate = parseFloat(platform.value) / 100;
+      const fixed = parseFloat(additional.value);
+      const date = new Date().toLocaleString();
 
-      const platformFee = (amount * platformRate) / 100;
-      const totalCharges = platformFee + additional;
-      const finalAmount = amount - totalCharges;
+      let amount, platformFee, totalFee, toBank;
 
-      const now = new Date().toLocaleString();
+      if (!isNaN(added)) {
+        amount = added;
+        platformFee = amount * rate;
+        totalFee = platformFee + fixed;
+        toBank = amount - totalFee;
+      } else if (!isNaN(bank)) {
+        toBank = bank;
+        amount = (toBank + fixed) / (1 - rate);
+        platformFee = amount * rate;
+        totalFee = platformFee + fixed;
+      } else {
+        alert("Enter Amount or Final Bank value");
+        return;
+      }
 
-      const receipt = 
+      receiptOutput.innerText =
 `-------------------------------
-    Siri Credit Card Services
-    Transaction Receipt
+Siri Credit Card Services
+Transaction Receipt
 -------------------------------
-Date       : ${now}
+Date       : ${date}
 Handled By : Sagar
 Contact    : 9959787923
 
 Amount     : ₹${amount.toFixed(2)}
-Platform % : ${platformRate.toFixed(2)}%
+Platform % : ${(rate*100).toFixed(2)}%
 Platform ₹ : ₹${platformFee.toFixed(2)}
-Add. Fee   : ₹${additional.toFixed(2)}
+Add. Fee   : ₹${fixed.toFixed(2)}
 -------------------------------
-Total Fee  : ₹${totalCharges.toFixed(2)}
-To Bank    : ₹${finalAmount.toFixed(2)}
+Total Fee  : ₹${totalFee.toFixed(2)}
+To Bank    : ₹${toBank.toFixed(2)}
 -------------------------------
 Thank you for choosing us!`;
-
-      document.getElementById('receiptOutput').innerText = receipt;
     }
 
     function copyReceipt() {
-      const text = document.getElementById('receiptOutput').innerText;
-      navigator.clipboard.writeText(text)
-        .then(() => alert("Receipt copied!"))
-        .catch(() => alert("Failed to copy."));
+      navigator.clipboard.writeText(receiptOutput.innerText);
+      alert("Receipt copied!");
     }
 
     function shareWhatsApp() {
-      const text = document.getElementById('receiptOutput').innerText;
-      const encoded = encodeURIComponent(text);
-      const url = `https://wa.me/?text=${encoded}`;
-      window.open(url, '_blank');
+      window.open(
+        "https://wa.me/?text=" + encodeURIComponent(receiptOutput.innerText),
+        "_blank"
+      );
     }
   </script>
+
 </body>
 </html>
