@@ -79,10 +79,33 @@
   </style>
 </head>
 
+
 <body>
 
-<div class="container">
+<div id="loginScreen" class="container">
   <h2>Siri Credit Card Services</h2>
+
+  <label>Email</label>
+  <input type="email" id="loginEmail" placeholder="Enter your email">
+
+  <label>Password</label>
+  <input type="password" id="loginPassword" placeholder="Enter your password">
+
+  <button id="loginButton">Login</button>
+  <p id="loginMessage" style="text-align:center;color:#c00;"></p>
+</div>
+
+<div class="container" id="calculatorScreen" style="display:none;">
+  <h2>Siri Credit Card Services</h2>
+
+  <p style="text-align:center;font-size:14px;">
+    Logged in as <span id="loggedInUser"></span>
+  </p>
+
+  <button id="logoutButton" type="button"
+          style="background:#666;margin-top:5px;">
+    Logout
+  </button>
 
   <label>Amount Added (₹)</label>
   <input type="number" id="amountAdded">
@@ -103,10 +126,10 @@
   <label>Fixed Server Fee (₹)</label>
   <input type="number" id="fixedFee" value="15">
 
-  <button onclick="calculate()">Generate Receipt</button>
+  <button id="generateButton" type="button">Generate Receipt</button>
 
   <div class="btns">
-    <button onclick="shareWhatsApp()">Share via WhatsApp</button>
+    <button id="shareButton" type="button">Share via WhatsApp</button>
   </div>
 
   <div class="receipt" id="receiptOutput"></div>
@@ -116,58 +139,170 @@
   </div>
 </div>
 
-<script>
-function formatDateTime() {
-  const d = new Date();
-  const day = String(d.getDate()).padStart(2, "0");
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const month = months[d.getMonth()];
-  const year = d.getFullYear();
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
-  let hours = d.getHours();
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  const seconds = String(d.getSeconds()).padStart(2, "0");
-  const ampm = hours >= 12 ? "PM" : "AM";
+  const firebaseConfig = {
+    apiKey: "AIzaSyAf9ojTwySG9PBAOFtbFBh8hDbVvo8OXvg",
+    authDomain: "rajashekar-cid2577.firebaseapp.com",
+    projectId: "rajashekar-cid2577",
+    storageBucket: "rajashekar-cid2577.firebasestorage.app",
+    messagingSenderId: "190285467660",
+    appId: "1:190285467660:web:c154956bcf195be6681e29",
+    measurementId: "G-6LDLTG7V73"
+  };
 
-  hours = hours % 12 || 12;
-  hours = String(hours).padStart(2, "0");
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  return `${day} ${month} ${year}, ${hours}:${minutes}:${seconds} ${ampm}`;
-}
+  const loginScreen = document.getElementById("loginScreen");
+  const calculatorScreen = document.getElementById("calculatorScreen");
+  const loginEmail = document.getElementById("loginEmail");
+  const loginPassword = document.getElementById("loginPassword");
+  const loginButton = document.getElementById("loginButton");
+  const loginMessage = document.getElementById("loginMessage");
+  const loggedInUser = document.getElementById("loggedInUser");
+  const logoutButton = document.getElementById("logoutButton");
+  const generateButton = document.getElementById("generateButton");
+  const shareButton = document.getElementById("shareButton");
 
-function calculate() {
+  function formatDateTime() {
+    const d = new Date();
+    const day = String(d.getDate()).padStart(2, "0");
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
 
-  const amountAddedVal = document.getElementById("amountAdded").value.trim();
-  const bankAmountVal  = document.getElementById("bankAmount").value.trim();
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    const seconds = String(d.getSeconds()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
 
-  const rate  = parseFloat(document.getElementById("platformRate").value) / 100;
-  const fixed = parseFloat(document.getElementById("fixedFee").value);
+    hours = hours % 12 || 12;
+    hours = String(hours).padStart(2, "0");
 
-  let amount, toBank, platformFee, totalFee;
-
-  if (amountAddedVal) {
-    amount = parseFloat(amountAddedVal);
-    platformFee = amount * rate;
-    totalFee = platformFee + fixed;
-    toBank = amount - totalFee;
-
-  } else if (bankAmountVal) {
-    toBank = parseFloat(bankAmountVal);
-    amount = (toBank + fixed) / (1 - rate);
-    platformFee = amount * rate;
-    totalFee = platformFee + fixed;
-
-  } else {
-    alert("Please enter an amount");
-    return;
+    return `${day} ${month} ${year}, ${hours}:${minutes}:${seconds} ${ampm}`;
   }
 
-  const receipt =
+  loginButton.addEventListener("click", async () => {
+    const email = loginEmail.value.trim();
+    const password = loginPassword.value;
+
+    if (!email || !password) {
+      loginMessage.textContent = "Please enter email and password.";
+      return;
+    }
+
+    loginButton.disabled = true;
+    loginMessage.textContent = "Signing in...";
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      loginMessage.textContent = "";
+    } catch (error) {
+      console.error(error);
+      loginMessage.textContent = error.code + " — " + error.message;
+    } finally {
+      loginButton.disabled = false;
+    }
+  });
+
+  logoutButton.addEventListener("click", async () => {
+    await signOut(auth);
+  });
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loginScreen.style.display = "none";
+      calculatorScreen.style.display = "block";
+      loggedInUser.textContent = user.email || "User";
+    } else {
+      loginScreen.style.display = "block";
+      calculatorScreen.style.display = "none";
+    }
+  });
+
+  async function calculate() {
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert("Please login first.");
+      return;
+    }
+
+    const amountAddedVal = document.getElementById("amountAdded").value.trim();
+    const bankAmountVal  = document.getElementById("bankAmount").value.trim();
+
+    const rate  = parseFloat(document.getElementById("platformRate").value) / 100;
+    const fixed = parseFloat(document.getElementById("fixedFee").value);
+
+    let amount, toBank, platformFee, totalFee;
+
+    if (amountAddedVal) {
+      amount = parseFloat(amountAddedVal);
+      platformFee = amount * rate;
+      totalFee = platformFee + fixed;
+      toBank = amount - totalFee;
+
+    } else if (bankAmountVal) {
+      toBank = parseFloat(bankAmountVal);
+      amount = (toBank + fixed) / (1 - rate);
+      platformFee = amount * rate;
+      totalFee = platformFee + fixed;
+
+    } else {
+      alert("Please enter an amount");
+      return;
+    }
+
+    if (
+      !Number.isFinite(amount) ||
+      !Number.isFinite(toBank) ||
+      !Number.isFinite(platformFee) ||
+      !Number.isFinite(totalFee)
+    ) {
+      alert("Please enter valid numbers.");
+      return;
+    }
+
+    generateButton.disabled = true;
+    generateButton.textContent = "Saving...";
+
+    const transactionDate = formatDateTime();
+
+    try {
+      const docRef = await addDoc(collection(db, "transactions"), {
+        transactionDate,
+        amount: Number(amount.toFixed(2)),
+        platformRate: Number((rate * 100).toFixed(2)),
+        platformFee: Number(platformFee.toFixed(2)),
+        fixedFee: Number(fixed.toFixed(2)),
+        totalFee: Number(totalFee.toFixed(2)),
+        toBank: Number(toBank.toFixed(2)),
+        handledBy: user.email || "Unknown",
+        userId: user.uid,
+        createdAt: serverTimestamp()
+      });
+
+      const receipt =
 `-------------------------------
 Siri Credit Card Services
 Transaction Receipt
 -------------------------------
-Date       : ${formatDateTime()}
+Date       : ${transactionDate}
 Handled By : Sagar
 Contact    : 9959787923
 
@@ -180,35 +315,54 @@ Total Fee  : ₹${totalFee.toFixed(2)}
 To Bank    : ₹${toBank.toFixed(2)}
 -------------------------------
 
+Transaction ID : ${docRef.id}
+
 Thank you for choosing
 Siri Credit Card Services
 -------------------------------`;
 
-  const box = document.getElementById("receiptOutput");
-  box.style.display = "block";
-  box.textContent = receipt;
-}
+      const box = document.getElementById("receiptOutput");
+      box.style.display = "block";
+      box.textContent = receipt;
 
-function shareWhatsApp() {
-  const text = document.getElementById("receiptOutput").textContent.trim();
-  if (!text) {
-    alert("Generate receipt first");
-    return;
+      alert("Receipt generated and transaction saved successfully.");
+    } catch (error) {
+      console.error("Firestore save error:", error);
+      alert("Receipt could not be saved. Please check your internet connection and try again.");
+    } finally {
+      generateButton.disabled = false;
+      generateButton.textContent = "Generate Receipt";
+    }
   }
-  window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
-}
 
-// ONE INPUT AT A TIME
-const amountAddedInput = document.getElementById("amountAdded");
-const bankAmountInput  = document.getElementById("bankAmount");
+  function shareWhatsApp() {
+    const text = document.getElementById("receiptOutput").textContent.trim();
 
-amountAddedInput.addEventListener("input", function () {
-  bankAmountInput.disabled = this.value.trim() !== "";
-});
+    if (!text) {
+      alert("Generate receipt first");
+      return;
+    }
 
-bankAmountInput.addEventListener("input", function () {
-  amountAddedInput.disabled = this.value.trim() !== "";
-});
+    window.open(
+      "https://wa.me/?text=" + encodeURIComponent(text),
+      "_blank"
+    );
+  }
+
+  generateButton.addEventListener("click", calculate);
+  shareButton.addEventListener("click", shareWhatsApp);
+
+  // ONE INPUT AT A TIME
+  const amountAddedInput = document.getElementById("amountAdded");
+  const bankAmountInput  = document.getElementById("bankAmount");
+
+  amountAddedInput.addEventListener("input", function () {
+    bankAmountInput.disabled = this.value.trim() !== "";
+  });
+
+  bankAmountInput.addEventListener("input", function () {
+    amountAddedInput.disabled = this.value.trim() !== "";
+  });
 </script>
 
 </body>
